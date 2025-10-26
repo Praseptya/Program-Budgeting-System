@@ -1,10 +1,10 @@
 # 💼 MetroTV Budgeting System
 
 ![Laravel](https://img.shields.io/badge/Laravel-11.x-red?logo=laravel)
-![PHP](https://img.shields.io/badge/PHP-8.2-blue?logo=php)
-![MySQL](https://img.shields.io/badge/MySQL-Database-orange?logo=mysql)
-![Chart.js](https://img.shields.io/badge/Chart.js-3.9.1-purple?logo=chartdotjs)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.0-indigo?logo=bootstrap)
+![PHP]
+![MySQL]
+![Chart.js]
+![Bootstrap]
 
 > **MetroTV Budgeting** adalah aplikasi berbasis web untuk mengelola dan memantau pengajuan anggaran di lingkungan MetroTV.  
 > Sistem ini mempermudah proses *template creation*, *budget submission*, dan *approval workflow* agar lebih cepat, akurat, dan transparan.
@@ -51,14 +51,14 @@
 
 ## 👨‍💻 Pengembang
 
-Nama: Muhamad Arya Praseptya
-Instansi: Universitas Pakuan – Fakultas MIPA
-Project: Praktik Lapang – Sistem Pengelolaan Pengajuan Anggaran
-GitHub: @Praseptya
+> Nama: Muhamad Arya Praseptya
+> Instansi: Universitas Pakuan – Fakultas MIPA
+> Project: Praktik Lapang – Sistem Pengelolaan Pengajuan Anggaran
+> GitHub: @Praseptya
 
 ---
 
 ## 📜 Lisensi
 
-Aplikasi ini dibuat untuk kepentingan pembelajaran dan pengembangan internal.
-Distribusi ulang tanpa izin tertulis dilarang.
+>Aplikasi ini dibuat untuk kepentingan pembelajaran dan pengembangan internal.
+>Distribusi ulang tanpa izin tertulis dilarang.
