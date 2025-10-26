@@ -51,14 +51,17 @@
 
 ## 👨‍💻 Pengembang
 
-> Nama: Muhamad Arya Praseptya
-> Instansi: Universitas Pakuan – Fakultas MIPA
-> Project: Praktik Lapang – Sistem Pengelolaan Pengajuan Anggaran
-> GitHub: @Praseptya
+Nama: Muhamad Arya Praseptya
+
+Instansi: Universitas Pakuan – Fakultas MIPA
+
+Project: Praktik Lapang – Sistem Pengelolaan Pengajuan Anggaran
+
+GitHub: @Praseptya
 
 ---
 
 ## 📜 Lisensi
 
->Aplikasi ini dibuat untuk kepentingan pembelajaran dan pengembangan internal.
->Distribusi ulang tanpa izin tertulis dilarang.
+Aplikasi ini dibuat untuk kepentingan pembelajaran dan pengembangan internal.
+Distribusi ulang tanpa izin tertulis dilarang.
