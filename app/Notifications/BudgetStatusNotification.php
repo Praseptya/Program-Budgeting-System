@@ -3,16 +3,17 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
-class BudgetStatusNotification extends Notification implements ShouldQueue
+class BudgetStatusNotification extends Notification
 {
     use Queueable;
 
     protected $budget;
+
     protected $status;
+
     protected $reason;
 
     public function __construct($budget, $status, $reason = null)
@@ -35,16 +36,16 @@ class BudgetStatusNotification extends Notification implements ShouldQueue
 
         $mail = (new MailMessage)
             ->subject($subject)
-            ->greeting('Halo, ' . $notifiable->name)
-            ->line('Budget "' . $this->budget->budget_name . '" telah diperbarui statusnya.')
-            ->line('Status: **' . ucfirst($this->status) . '**');
+            ->greeting('Halo, '.$notifiable->name)
+            ->line('Budget "'.$this->budget->budget_name.'" telah diperbarui statusnya.')
+            ->line('Status: **'.ucfirst($this->status).'**');
 
-        if (!$isApproved && $this->reason) {
-            $mail->line('Alasan Penolakan: "' . $this->reason . '"');
+        if (! $isApproved && $this->reason) {
+            $mail->line('Alasan Penolakan: "'.$this->reason.'"');
         }
 
         $mail->action('Lihat Detail', url(route('budgets.show', $this->budget->id_budget)))
-             ->line('Terima kasih telah menggunakan sistem MetroTV Budgeting.');
+            ->line('Terima kasih telah menggunakan sistem MetroTV Budgeting.');
 
         return $mail;
     }

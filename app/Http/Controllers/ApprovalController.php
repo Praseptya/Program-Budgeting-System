@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Notifications\BudgetStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Notifications\BudgetStatusNotification;
-use Illuminate\Support\Facades\Notification;
-
+use Illuminate\Support\Facades\Log;                     // ⬅ pakai model, bukan DB::table utk notifikasi
 
 class ApprovalController extends Controller
 {
@@ -19,6 +19,7 @@ class ApprovalController extends Controller
     {
         $budgets = DB::table('budgets as b')
             ->leftJoin('users as u', 'u.id_user', '=', 'b.created_by')
+            ->leftJoin('budget_items as bi', 'bi.budget_id', '=', 'b.id_budget')
             ->select(
                 'b.id_budget',
                 'b.budget_name',
@@ -28,7 +29,6 @@ class ApprovalController extends Controller
                 'b.status',
                 DB::raw('COALESCE(SUM(bi.amount), 0) as total')
             )
-            ->leftJoin('budget_items as bi', 'bi.budget_id', '=', 'b.id_budget')
             ->groupBy('b.id_budget', 'b.budget_name', 'u.name', 'b.periode_from', 'b.periode_to', 'b.status')
             ->orderBy('b.created_at', 'desc')
             ->get();
@@ -39,17 +39,26 @@ class ApprovalController extends Controller
     public function approve($id)
     {
         $budget = DB::table('budgets')->where('id_budget', $id)->first();
+        if (! $budget) {
+            return back()->with('error', 'Budget tidak ditemukan.');
+        }
 
-        DB::table('budgets')->where('id_budget', $id)->update([
-            'status' => 'Approved',
-            'updated_at' => now(),
-        ]);
+        DB::table('budgets')
+            ->where('id_budget', $id)
+            ->update([
+                'status' => 'Approved',
+                'updated_at' => now(),
+            ]);
 
-        // Kirim notifikasi ke pembuat budget
-        $creator = DB::table('users')->where('id_user', $budget->created_by)->first();
+        // kirim notifikasi ke PEMBUAT budget sebagai model User (punya Notifiable)
+        $creator = User::where('id_user', $budget->created_by)->first();
         if ($creator) {
-            Notification::route('mail', $creator->email)
-                ->notify(new BudgetStatusNotification($budget, 'Approved'));
+            try {
+                // kirim langsung (sync). Jika queue aktif, pastikan tabel jobs ada.
+                $creator->notify(new BudgetStatusNotification($budget, 'Approved'));
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notifikasi approve: '.$e->getMessage());
+            }
         }
 
         return back()->with('success', 'Budget berhasil disetujui.');
@@ -57,25 +66,34 @@ class ApprovalController extends Controller
 
     public function reject(Request $request, $id)
     {
-        $budget = DB::table('budgets')->where('id_budget', $id)->first();
-        $reason = $request->input('reason');
-
-        DB::table('budgets')->where('id_budget', $id)->update([
-            'status' => 'Rejected',
-            'rejection_reason' => $reason,
-            'updated_at' => now(),
+        $request->validate([
+            'reason' => 'required|string|max:500',
         ]);
 
-        // Kirim notifikasi ke pembuat budget
-        $creator = DB::table('users')->where('id_user', $budget->created_by)->first();
+        $budget = DB::table('budgets')->where('id_budget', $id)->first();
+        if (! $budget) {
+            return back()->with('error', 'Budget tidak ditemukan.');
+        }
+
+        $reason = $request->input('reason');
+
+        DB::table('budgets')
+            ->where('id_budget', $id)
+            ->update([
+                'status' => 'Rejected',
+                'rejection_reason' => $reason,
+                'updated_at' => now(),
+            ]);
+
+        $creator = User::where('id_user', $budget->created_by)->first();
         if ($creator) {
-            Notification::route('mail', $creator->email)
-                ->notify(new BudgetStatusNotification($budget, 'Rejected', $reason));
+            try {
+                $creator->notify(new BudgetStatusNotification($budget, 'Rejected', $reason));
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notifikasi reject: '.$e->getMessage());
+            }
         }
 
         return back()->with('error', 'Budget ditolak.');
     }
-
-
 }
-

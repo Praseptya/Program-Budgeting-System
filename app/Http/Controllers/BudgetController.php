@@ -1,13 +1,14 @@
 <?php
+
 // app/Http/Controllers/BudgetController.php
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class BudgetController extends Controller
 {
@@ -21,7 +22,7 @@ class BudgetController extends Controller
     public function create()
     {
         $templates = DB::table('templates')
-            ->select('id_template','name','description','category')
+            ->select('id_template', 'name', 'description', 'category')
             ->orderBy('name')
             ->get();
 
@@ -59,13 +60,18 @@ class BudgetController extends Controller
 
         $budgets = $q->get()->map(function ($r) {
             $from = $r->periode_from ? \Carbon\Carbon::parse($r->periode_from) : null;
-            $to   = $r->periode_to   ? \Carbon\Carbon::parse($r->periode_to)   : null;
+            $to = $r->periode_to ? \Carbon\Carbon::parse($r->periode_to) : null;
 
             if ($from && $to) {
-                if ($from->isSameDay($to))       $r->periode_fmt = $from->isoFormat('D MMM');
-                elseif ($from->isSameMonth($to)) $r->periode_fmt = $from->isoFormat('D').'–'.$to->isoFormat('D MMM');
-                elseif ($from->isSameYear($to))  $r->periode_fmt = $from->isoFormat('D MMM').' – '.$to->isoFormat('D MMM');
-                else                              $r->periode_fmt = $from->isoFormat('D MMM YYYY').' – '.$to->isoFormat('D MMM YYYY');
+                if ($from->isSameDay($to)) {
+                    $r->periode_fmt = $from->isoFormat('D MMM');
+                } elseif ($from->isSameMonth($to)) {
+                    $r->periode_fmt = $from->isoFormat('D').'–'.$to->isoFormat('D MMM');
+                } elseif ($from->isSameYear($to)) {
+                    $r->periode_fmt = $from->isoFormat('D MMM').' – '.$to->isoFormat('D MMM');
+                } else {
+                    $r->periode_fmt = $from->isoFormat('D MMM YYYY').' – '.$to->isoFormat('D MMM YYYY');
+                }
             } elseif ($from) {
                 $r->periode_fmt = $from->isoFormat('D MMM');
             } elseif ($to) {
@@ -73,101 +79,106 @@ class BudgetController extends Controller
             } else {
                 $r->periode_fmt = '—';
             }
+
             return $r;
         });
 
         return view('budgets.create', [
             'templates' => $templates,
-            'budgets'   => $budgets,
+            'budgets' => $budgets,
         ]);
     }
-
 
     /** Simpan budget baru: status default Pending, copy items dari template */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'template_id'   => 'required|integer|exists:templates,id_template',
-            'budget_name'   => 'required|string|max:150',
-            'dept'          => 'required|string|max:100',
-            'periode_from'  => 'required|date',
-            'periode_to'    => 'required|date|after_or_equal:periode_from',
-            'description'   => 'required|string|max:255',
+            'template_id' => 'required|integer|exists:templates,id_template',
+            'budget_name' => 'required|string|max:150',
+            'dept' => 'required|string|max:100',
+            'periode_from' => 'required|date',
+            'periode_to' => 'required|date|after_or_equal:periode_from',
+            'description' => 'required|string|max:255',
         ]);
 
         // tentukan nama kolom yang tersedia di DB
-        $deptCol = Schema::hasColumn('budgets','dept')         ? 'dept'
-                : (Schema::hasColumn('budgets','department')   ? 'department'
-                : (Schema::hasColumn('budgets','departement')  ? 'departement' : null));
+        $deptCol = Schema::hasColumn('budgets', 'dept') ? 'dept'
+                : (Schema::hasColumn('budgets', 'department') ? 'department'
+                : (Schema::hasColumn('budgets', 'departement') ? 'departement' : null));
 
-        $fromCol = Schema::hasColumn('budgets','periode_from') ? 'periode_from'
-                : (Schema::hasColumn('budgets','period_from')  ? 'period_from'
-                : (Schema::hasColumn('budgets','start_date')   ? 'start_date' : null));
+        $fromCol = Schema::hasColumn('budgets', 'periode_from') ? 'periode_from'
+                : (Schema::hasColumn('budgets', 'period_from') ? 'period_from'
+                : (Schema::hasColumn('budgets', 'start_date') ? 'start_date' : null));
 
-        $toCol   = Schema::hasColumn('budgets','periode_to')   ? 'periode_to'
-                : (Schema::hasColumn('budgets','period_to')    ? 'period_to'
-                : (Schema::hasColumn('budgets','end_date')     ? 'end_date' : null));
+        $toCol = Schema::hasColumn('budgets', 'periode_to') ? 'periode_to'
+                : (Schema::hasColumn('budgets', 'period_to') ? 'period_to'
+                : (Schema::hasColumn('budgets', 'end_date') ? 'end_date' : null));
 
         $payload = [
-            'budget_name'  => $data['budget_name'],
-            'template_id'  => (int)$data['template_id'],
-            'status'       => Schema::hasColumn('budgets','status') ? 'Pending' : null,
-            'description'  => (string)$data['description'],
-            'created_at'   => now(),
-            'updated_at'   => now(),
+            'budget_name' => $data['budget_name'],
+            'template_id' => (int) $data['template_id'],
+            'status' => Schema::hasColumn('budgets', 'status') ? 'Pending' : null,
+            'description' => (string) $data['description'],
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
 
-        if ($deptCol) { $payload[$deptCol] = (string)$data['dept']; }
-        if ($fromCol) { $payload[$fromCol] = $data['periode_from']; }
-        if ($toCol)   { $payload[$toCol]   = $data['periode_to']; }
+        if ($deptCol) {
+            $payload[$deptCol] = (string) $data['dept'];
+        }
+        if ($fromCol) {
+            $payload[$fromCol] = $data['periode_from'];
+        }
+        if ($toCol) {
+            $payload[$toCol] = $data['periode_to'];
+        }
 
-        if (Schema::hasColumn('budgets','created_by')) {
+        if (Schema::hasColumn('budgets', 'created_by')) {
             $payload['created_by'] = optional(Auth::user())->id_user ?? Auth::id();
         }
 
         // buang key yang nilainya null agar tidak error di driver lama
-        $payload = array_filter($payload, fn($v) => !is_null($v));
+        $payload = array_filter($payload, fn ($v) => ! is_null($v));
 
         $budgetId = DB::table('budgets')->insertGetId($payload, 'id_budget');
 
         // === copy items dari template_items → budget_items (sesuai patch kamu sebelumnya) ===
         $tplItems = DB::table('template_items as ti')
-            ->leftJoin('master_items as mi','mi.id_item','=','ti.item_id')
+            ->leftJoin('master_items as mi', 'mi.id_item', '=', 'ti.item_id')
             ->select([
-                'ti.item_id','ti.item_name','ti.qty','ti.unit','ti.unit_price','ti.short_desc',
-                'mi.item_name as mi_item_name','mi.description as mi_description',
+                'ti.item_id', 'ti.item_name', 'ti.qty', 'ti.unit', 'ti.unit_price', 'ti.short_desc',
+                'mi.item_name as mi_item_name', 'mi.description as mi_description',
             ])
             ->where('ti.template_id', $data['template_id'])
             ->get();
 
         foreach ($tplItems as $it) {
-            $name  = $it->item_name ?: ($it->mi_item_name ?? '');
-            $desc  = $it->short_desc ?: ($it->mi_description ?? '');
-            $price = (float)($it->unit_price ?? 0);
-            $qty   = (int)($it->qty ?? 0);
-            $amt   = $qty * $price;
+            $name = $it->item_name ?: ($it->mi_item_name ?? '');
+            $desc = $it->short_desc ?: ($it->mi_description ?? '');
+            $price = (float) ($it->unit_price ?? 0);
+            $qty = (int) ($it->qty ?? 0);
+            $amt = $qty * $price;
 
             DB::table('budget_items')->insert([
-                'budget_id'     => $budgetId,
-                'item_id'       => (int)$it->item_id,
-                'item_name'     => (string)$name,
-                'short_desc'    => (string)$desc,
-                'qty'           => $qty,
-                'unit'          => (string)($it->unit ?? ''),
-                'unit_price'    => $price,
-                'amount'        => $amt,
+                'budget_id' => $budgetId,
+                'item_id' => (int) $it->item_id,
+                'item_name' => (string) $name,
+                'short_desc' => (string) $desc,
+                'qty' => $qty,
+                'unit' => (string) ($it->unit ?? ''),
+                'unit_price' => $price,
+                'amount' => $amt,
                 // opsional isi kolom lama jika masih ada di DB kamu
-                'top_price'     => Schema::hasColumn('budget_items','top_price') ? $price : null,
-                'bottom_price'  => Schema::hasColumn('budget_items','bottom_price') ? $price : null,
-                'created_at'    => Schema::hasColumn('budget_items','created_at') ? now() : null,
-                'updated_at'    => Schema::hasColumn('budget_items','updated_at') ? now() : null,
+                'top_price' => Schema::hasColumn('budget_items', 'top_price') ? $price : null,
+                'bottom_price' => Schema::hasColumn('budget_items', 'bottom_price') ? $price : null,
+                'created_at' => Schema::hasColumn('budget_items', 'created_at') ? now() : null,
+                'updated_at' => Schema::hasColumn('budget_items', 'updated_at') ? now() : null,
             ]);
         }
 
         return redirect()->route('budgets.show', $budgetId)
             ->with('success', 'Budget baru berhasil dibuat.');
     }
-
 
     /** Detail budget (tampilkan tabel item setelah dibuat) */
     public function show($id)
@@ -177,7 +188,7 @@ class BudgetController extends Controller
             ->leftJoin('event_programs as ep', 'ep.id_event_program', '=', 't.event_program_id')
             ->leftJoin('users as uCreator', 'uCreator.id_user', '=', 'b.created_by')
             ->leftJoin('users as uProg', 'uProg.id_user', '=', 'ep.pic_user_id')
-            ->leftJoin('users as uTpl',  'uTpl.id_user',  '=', 't.pic_user_id')
+            ->leftJoin('users as uTpl', 'uTpl.id_user', '=', 't.pic_user_id')
             ->selectRaw('
                 b.*,
                 t.name as template_name,
@@ -189,32 +200,38 @@ class BudgetController extends Controller
             ->where('b.id_budget', $id)
             ->first();
 
-        if (!$budget) {
-            return redirect()->route('budgets.create')->with('error','Budget tidak ditemukan.');
+        if (! $budget) {
+            return redirect()->route('budgets.create')->with('error', 'Budget tidak ditemukan.');
         }
 
         // departemen + periode (biarkan seperti versi kamu)
         $deptName = $budget->dept ?? ($budget->department ?? ($budget->departement ?? null));
-        $rawFrom  = $budget->periode_from ?? ($budget->period_from ?? ($budget->start_date ?? null));
-        $rawTo    = $budget->periode_to   ?? ($budget->period_to   ?? ($budget->end_date   ?? null));
-        $rawFrom  = ($rawFrom === '0000-00-00' || $rawFrom === '') ? null : $rawFrom;
-        $rawTo    = ($rawTo   === '0000-00-00' || $rawTo   === '') ? null : $rawTo;
+        $rawFrom = $budget->periode_from ?? ($budget->period_from ?? ($budget->start_date ?? null));
+        $rawTo = $budget->periode_to ?? ($budget->period_to ?? ($budget->end_date ?? null));
+        $rawFrom = ($rawFrom === '0000-00-00' || $rawFrom === '') ? null : $rawFrom;
+        $rawTo = ($rawTo === '0000-00-00' || $rawTo === '') ? null : $rawTo;
 
         $periodeFmt = '—';
         try {
             $from = $rawFrom ? Carbon::parse($rawFrom) : null;
-            $to   = $rawTo   ? Carbon::parse($rawTo)   : null;
+            $to = $rawTo ? Carbon::parse($rawTo) : null;
             if ($from && $to) {
-                if ($from->isSameDay($to))       $periodeFmt = $from->isoFormat('D MMM YYYY');
-                elseif ($from->isSameMonth($to)) $periodeFmt = $from->isoFormat('D').'–'.$to->isoFormat('D MMM YYYY');
-                elseif ($from->isSameYear($to))  $periodeFmt = $from->isoFormat('D MMM').' – '.$to->isoFormat('D MMM YYYY');
-                else                              $periodeFmt = $from->isoFormat('D MMM YYYY').' – '.$to->isoFormat('D MMM YYYY');
+                if ($from->isSameDay($to)) {
+                    $periodeFmt = $from->isoFormat('D MMM YYYY');
+                } elseif ($from->isSameMonth($to)) {
+                    $periodeFmt = $from->isoFormat('D').'–'.$to->isoFormat('D MMM YYYY');
+                } elseif ($from->isSameYear($to)) {
+                    $periodeFmt = $from->isoFormat('D MMM').' – '.$to->isoFormat('D MMM YYYY');
+                } else {
+                    $periodeFmt = $from->isoFormat('D MMM YYYY').' – '.$to->isoFormat('D MMM YYYY');
+                }
             } elseif ($from) {
                 $periodeFmt = $from->isoFormat('D MMM YYYY');
             } elseif ($to) {
                 $periodeFmt = $to->isoFormat('D MMM YYYY');
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // format tanggal dibuat untuk ditampilkan
         $createdAtFmt = $budget->created_at ? Carbon::parse($budget->created_at)->isoFormat('D MMM YYYY, HH.mm') : '—';
@@ -222,57 +239,48 @@ class BudgetController extends Controller
         $items = DB::table('budget_items')
             ->where('budget_id', $id)
             ->orderBy('id_budget_item')
-            ->get(['item_id','item_name','short_desc','qty','unit','unit_price','amount']);
+            ->get(['item_id', 'item_name', 'short_desc', 'qty', 'unit', 'unit_price', 'amount']);
 
         $grandTotal = $items->sum('amount');
 
         return view('budgets.show', [
-            'budget'        => $budget,
-            'items'         => $items,
-            'grandTotal'    => $grandTotal,
-            'deptName'      => $deptName,
-            'periodeFmt'    => $periodeFmt,
-            'createdAtFmt'  => $createdAtFmt,   // 🔹 kirim ke blade
+            'budget' => $budget,
+            'items' => $items,
+            'grandTotal' => $grandTotal,
+            'deptName' => $deptName,
+            'periodeFmt' => $periodeFmt,
+            'createdAtFmt' => $createdAtFmt,   // 🔹 kirim ke blade
         ]);
     }
-
 
     /** AJAX: detail template (grand total & description) untuk autofill di create */
     public function templateDetail($id)
     {
-        $tpl = DB::table('templates as t')
-            ->leftJoin('event_programs as ep', 'ep.id_event_program', '=', 't.event_program_id')
-            ->leftJoin('users as uProg', 'uProg.id_user', '=', 'ep.pic_user_id')
-            ->leftJoin('users as uTpl',  'uTpl.id_user',  '=', 't.pic_user_id')
-            ->where('t.id_template', $id)
-            ->first([
-                't.id_template',
-                't.name',
-                DB::raw('COALESCE(ep.name, "")                        as program_name'),
-                DB::raw('COALESCE(ep.category, t.category, "Off Air") as program_category'),
-                DB::raw('COALESCE(uProg.name, uTpl.name, "—")         as program_pic_name'),
-                DB::raw('COALESCE(t.description, ep.description, "")  as description'),
-            ]);
+        $tpl = DB::table('templates')
+            ->where('id_template', $id)
+            ->first(['id_template', 'name', 'description', 'category']);
 
-        if (!$tpl) {
+        if (! $tpl) {
             return response()->json(['ok' => false, 'message' => 'Template not found'], 404);
         }
 
-        $grand = (float) DB::table('template_items')
+        // hitung grand total dari template_items
+        $grand = DB::table('template_items')
             ->where('template_id', $id)
-            ->selectRaw('COALESCE(SUM(qty * unit_price),0) as gt')
-            ->value('gt');
+            ->selectRaw('COALESCE(SUM(qty * unit_price), 0) AS gt')
+            ->value('gt'); // ← ini akan ambil alias gt
+
+        // fallback kalau null
+        $grand = (float) ($grand ?? 0);
 
         return response()->json([
-            'ok'   => true,
-            'data' => [
-                'id'               => $tpl->id_template,
-                'name'             => $tpl->name,
-                'program_name'     => $tpl->program_name,
-                'program_category' => $tpl->program_category,
-                'program_pic_name' => $tpl->program_pic_name,
-                'description'      => $tpl->description,
-                'grand_total'      => $grand,
+            'ok' => true,
+            'template' => [
+                'id' => (int) $tpl->id_template,
+                'name' => $tpl->name,
+                'description' => $tpl->description ?? '',
+                'category' => $tpl->category ?? 'Off Air',
+                'grand_total' => $grand,
             ],
         ]);
     }
@@ -280,7 +288,7 @@ class BudgetController extends Controller
     /** AJAX: cari master items (untuk modal tambah item) */
     public function itemSearch(Request $request)
     {
-        $q = trim($request->get('q',''));
+        $q = trim($request->get('q', ''));
 
         $base = DB::table('master_items as i')
             ->leftJoin('units as u', 'u.id_unit', '=', 'i.unit_id')
@@ -290,7 +298,7 @@ class BudgetController extends Controller
         if ($q !== '') {
             $base->where(function ($w) use ($q) {
                 $w->where('i.item_name', 'like', "%{$q}%")
-                  ->orWhere('i.description', 'like', "%{$q}%");
+                    ->orWhere('i.description', 'like', "%{$q}%");
             });
         }
 
@@ -310,10 +318,10 @@ class BudgetController extends Controller
     {
         $request->validate([
             'item_id' => 'required|integer|exists:master_items,id_item',
-            'qty'     => 'nullable|integer|min:1'
+            'qty' => 'nullable|integer|min:1',
         ]);
 
-        $qty = max(1, (int)($request->qty ?? 1));
+        $qty = max(1, (int) ($request->qty ?? 1));
 
         // ambil data master item + unit + harga
         $mi = DB::table('master_items as m')
@@ -328,51 +336,59 @@ class BudgetController extends Controller
                 DB::raw('COALESCE(u.unit_name, "") as unit_name'),
             ]);
 
-        if (!$mi) {
-            return back()->with('error','Master item tidak ditemukan.');
+        if (! $mi) {
+            return back()->with('error', 'Master item tidak ditemukan.');
         }
 
         // tentukan unit price (pakai top_price jika ada, else bottom)
-        $unitPrice = (float)($mi->top_price ?? 0);
-        if ($unitPrice <= 0) $unitPrice = (float)($mi->bottom_price ?? 0);
+        $unitPrice = (float) ($mi->top_price ?? 0);
+        if ($unitPrice <= 0) {
+            $unitPrice = (float) ($mi->bottom_price ?? 0);
+        }
 
         // cek apakah item ini sudah ada di budget → merge qty
         $exist = DB::table('budget_items')
             ->where('budget_id', $id)
-            ->where('item_id',   $mi->id_item)
-            ->first(['id_budget_item','qty','unit_price']);
+            ->where('item_id', $mi->id_item)
+            ->first(['id_budget_item', 'qty', 'unit_price']);
 
         // deteksi kolom created_at/updated_at agar tidak error di schema lama
         $hasCreated = Schema::hasColumn('budget_items', 'created_at');
         $hasUpdated = Schema::hasColumn('budget_items', 'updated_at');
 
         if ($exist) {
-            $newQty = (int)$exist->qty + $qty;
+            $newQty = (int) $exist->qty + $qty;
             $payload = [
-                'qty'   => $newQty,
-                'unit'  => (string)($mi->unit_name ?? ''),
-                'amount'=> (float)$unitPrice * $newQty,
+                'qty' => $newQty,
+                'unit' => (string) ($mi->unit_name ?? ''),
+                'amount' => (float) $unitPrice * $newQty,
             ];
-            if ($hasUpdated) $payload['updated_at'] = now();
+            if ($hasUpdated) {
+                $payload['updated_at'] = now();
+            }
 
             DB::table('budget_items')
                 ->where('id_budget_item', $exist->id_budget_item)
                 ->update($payload);
         } else {
             $payload = [
-                'budget_id'  => (int)$id,
-                'item_id'    => (int)$mi->id_item,
-                'item_name'  => (string)$mi->item_name,
-                'short_desc' => (string)($mi->description ?? ''),
-                'qty'        => $qty,
-                'unit'       => (string)($mi->unit_name ?? ''),
-                'unit_price' => (float)$unitPrice,
-                'amount'     => (float)$unitPrice * $qty,
-                'top_price'    => (float)($mi->top_price ?? 0),
-                'bottom_price' => (float)($mi->bottom_price ?? 0),
+                'budget_id' => (int) $id,
+                'item_id' => (int) $mi->id_item,
+                'item_name' => (string) $mi->item_name,
+                'short_desc' => (string) ($mi->description ?? ''),
+                'qty' => $qty,
+                'unit' => (string) ($mi->unit_name ?? ''),
+                'unit_price' => (float) $unitPrice,
+                'amount' => (float) $unitPrice * $qty,
+                'top_price' => (float) ($mi->top_price ?? 0),
+                'bottom_price' => (float) ($mi->bottom_price ?? 0),
             ];
-            if ($hasCreated) $payload['created_at'] = now();
-            if ($hasUpdated) $payload['updated_at'] = now();
+            if ($hasCreated) {
+                $payload['created_at'] = now();
+            }
+            if ($hasUpdated) {
+                $payload['updated_at'] = now();
+            }
 
             DB::table('budget_items')->insert($payload);
         }
@@ -380,7 +396,7 @@ class BudgetController extends Controller
         // setelah tambah, balik ke edit & scroll ke bawah
         return redirect()
             ->route('budgets.edit', $id)
-            ->with('success','Item ditambahkan.')
+            ->with('success', 'Item ditambahkan.')
             ->with('scroll_bottom', true);
     }
 
@@ -394,7 +410,7 @@ class BudgetController extends Controller
 
         return redirect()
             ->route('budgets.edit', $id)
-            ->with('success','Item dihapus.')
+            ->with('success', 'Item dihapus.')
             ->with('scroll_bottom', true);
     }
 
@@ -403,35 +419,39 @@ class BudgetController extends Controller
     {
         $data = $request->validate([
             'delta' => 'nullable|in:inc,dec',
-            'qty'   => 'nullable|integer|min:1',
+            'qty' => 'nullable|integer|min:1',
         ]);
 
         $row = DB::table('budget_items')
             ->where('id_budget_item', $rowId)
             ->where('budget_id', $id)
-            ->first(['qty','unit_price']);
+            ->first(['qty', 'unit_price']);
 
-        if (!$row) {
+        if (! $row) {
             return response()->json(['ok' => false, 'message' => 'Row not found'], 404);
         }
 
-        $newQty = (int)$row->qty;
-        if (!empty($data['delta'])) {
+        $newQty = (int) $row->qty;
+        if (! empty($data['delta'])) {
             $newQty += ($data['delta'] === 'inc') ? 1 : -1;
         }
         if (isset($data['qty'])) {
-            $newQty = (int)$data['qty'];
+            $newQty = (int) $data['qty'];
         }
-        if ($newQty < 1) $newQty = 1;
+        if ($newQty < 1) {
+            $newQty = 1;
+        }
 
         // deteksi kolom updated_at
         $hasUpdated = Schema::hasColumn('budget_items', 'updated_at');
 
         $payload = [
-            'qty'    => $newQty,
-            'amount' => (float)$row->unit_price * $newQty,
+            'qty' => $newQty,
+            'amount' => (float) $row->unit_price * $newQty,
         ];
-        if ($hasUpdated) $payload['updated_at'] = now();
+        if ($hasUpdated) {
+            $payload['updated_at'] = now();
+        }
 
         DB::table('budget_items')
             ->where('id_budget_item', $rowId)
@@ -445,19 +465,18 @@ class BudgetController extends Controller
             ->value('gt');
 
         return response()->json([
-            'ok'           => true,
-            'qty'          => $newQty,
-            'row_total'    => $rowTotal,
-            'grand_total'  => $grand,
+            'ok' => true,
+            'qty' => $newQty,
+            'row_total' => $rowTotal,
+            'grand_total' => $grand,
         ]);
     }
-
 
     public function edit($id)
     {
         $budget = DB::table('budgets as b')
-            ->leftJoin('templates as t','t.id_template','=','b.template_id')
-            ->leftJoin('users as u','u.id_user','=','t.pic_user_id')
+            ->leftJoin('templates as t', 't.id_template', '=', 'b.template_id')
+            ->leftJoin('users as u', 'u.id_user', '=', 't.pic_user_id')
             ->select(
                 'b.*',
                 't.id_template',
@@ -465,15 +484,15 @@ class BudgetController extends Controller
                 't.category as template_category',
                 'u.name as pic_name'
             )
-            ->where('b.id_budget',$id)
+            ->where('b.id_budget', $id)
             ->first();
 
-        if(!$budget){
-            return redirect()->route('budgets.create')->with('error','Budget tidak ditemukan.');
+        if (! $budget) {
+            return redirect()->route('budgets.create')->with('error', 'Budget tidak ditemukan.');
         }
 
         $templates = DB::table('templates')
-            ->select('id_template','name','description','category')
+            ->select('id_template', 'name', 'description', 'category')
             ->orderBy('name')
             ->get();
 
@@ -481,7 +500,7 @@ class BudgetController extends Controller
         $items = DB::table('budget_items')
             ->where('budget_id', $id)
             ->orderBy('id_budget_item')
-            ->get(['id_budget_item','item_id','item_name','short_desc','qty','unit','unit_price','amount']);
+            ->get(['id_budget_item', 'item_id', 'item_name', 'short_desc', 'qty', 'unit', 'unit_price', 'amount']);
 
         $periodeFrom = $budget && $budget->periode_from
             ? Carbon::parse($budget->periode_from)->format('Y-m-d')
@@ -492,48 +511,54 @@ class BudgetController extends Controller
             : '';
 
         return view('budgets.edit', [
-            'budget'    => $budget,
+            'budget' => $budget,
             'templates' => $templates,
-            'items'     => $items,
+            'items' => $items,
             'periodeFrom' => $periodeFrom,
-            'periodeTo'   => $periodeTo,
+            'periodeTo' => $periodeTo,
         ]);
     }
-
 
     public function update(Request $request, $id)
     {
         $data = $request->validate([
-            'template_id'   => 'required|integer|exists:templates,id_template',
-            'budget_name'   => 'required|string|max:150',
-            'dept'          => 'required|string|max:100',
-            'periode_from'  => 'required|date',
-            'periode_to'    => 'required|date|after_or_equal:periode_from',
-            'description'   => 'required|string|max:255',
+            'budget_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'periode_from' => 'required|date',
+            'periode_to' => 'required|date|after_or_equal:periode_from',
+            'dept' => 'nullable|string|max:100',
         ]);
 
-        DB::table('budgets')->where('id_budget',$id)->update([
-            'template_id'   => $data['template_id'],
-            'budget_name'   => $data['budget_name'],
-            'dept'          => $data['dept'],
-            'periode_from'  => $data['periode_from'],
-            'periode_to'    => $data['periode_to'],
-            'description'   => $data['description'],
-            'updated_at'    => now(),
+        // Ambil data budget lama
+        $budget = DB::table('budgets')->where('id_budget', $id)->first();
+        if (! $budget) {
+            return back()->with('error', 'Data budget tidak ditemukan.');
+        }
+
+        // Jika status sebelumnya Rejected → ubah otomatis ke Pending
+        $newStatus = $budget->status === 'Rejected' ? 'Pending' : $budget->status;
+
+        DB::table('budgets')->where('id_budget', $id)->update([
+            'budget_name' => $data['budget_name'],
+            'description' => $data['description'],
+            'periode_from' => $data['periode_from'],
+            'periode_to' => $data['periode_to'],
+            'dept' => $data['dept'],
+            'status' => $newStatus,
+            'updated_at' => now(),
         ]);
 
-        return redirect()->route('budgets.show',$id)
-            ->with('success','Budget berhasil diperbarui.');
+        return redirect()->route('budgets.show', $id)
+            ->with('success', 'Budget berhasil diperbarui. Status otomatis menjadi '.$newStatus.'.');
     }
 
     public function destroy($id)
     {
-        DB::transaction(function() use ($id){
-            DB::table('budget_items')->where('budget_id',$id)->delete();
-            DB::table('budgets')->where('id_budget',$id)->delete();
+        DB::transaction(function () use ($id) {
+            DB::table('budget_items')->where('budget_id', $id)->delete();
+            DB::table('budgets')->where('id_budget', $id)->delete();
         });
 
-        return redirect()->route('budgets.create')->with('success','Budget berhasil dihapus.');
+        return redirect()->route('budgets.create')->with('success', 'Budget berhasil dihapus.');
     }
-
 }

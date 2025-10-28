@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Management User - MetroTV Budgeting')
-@section('page_title', 'Management User')
+@section('title', 'User Management - MetroTV Budgeting')
+@section('page_title', 'User Management')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/master-data.css') }}">
@@ -31,13 +31,13 @@
     {{-- Tambah User --}}
     <section class="charts-section">
         <div class="chart-card" style="margin-top:30px; margin-bottom:-20px;">
-            <div class="chart-header" style="margin-bottom:0;"><h3>Tambah User</h3></div>
+            <div class="chart-header" style="margin-bottom:0;"><h3>Add User</h3></div>
             <div class="chart-content" style="padding-top:16px; height:auto;">
                 <form method="POST" action="{{ route('users.store') }}" autocomplete="off">
                     @csrf
                     <div class="grid-2">
                         <div>
-                            <label class="lbl">Nama</label>
+                            <label class="lbl">Name</label>
                             <input name="name" type="text" value="{{ old('name') }}" required class="inp">
                         </div>
                         <div>
@@ -51,7 +51,7 @@
                         <div>
                             <label class="lbl">Level/Role</label>
                             <select name="role" required class="inp">
-                                <option value="">Pilih Level</option>
+                                <option value="">Choose Level</option>
                                 @foreach($levels as $lvl)
                                     <option value="{{ $lvl->id_level }}" @selected(old('role') == $lvl->id_level)>{{ $lvl->level_name }}</option>
                                 @endforeach
@@ -62,7 +62,7 @@
                             <input name="password" type="password" required class="inp">
                         </div>
                         <div>
-                            <label class="lbl">Konfirmasi Password</label>
+                            <label class="lbl">Confirm Password</label>
                             <input name="password_confirmation" type="password" required class="inp">
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                     @csrf @method('PUT')
                     <div class="grid-2">
                         <div>
-                            <label class="lbl">Nama</label>
+                            <label class="lbl">Name</label>
                             <input id="edit_name" name="name" type="text" required class="inp">
                         </div>
                         <div>
@@ -128,11 +128,11 @@
                     @csrf
                     <div class="grid-2">
                         <div>
-                            <label class="lbl">Password Baru</label>
+                            <label class="lbl">New Password</label>
                             <input id="reset_pw1" name="password" type="password" required class="inp">
                         </div>
                         <div>
-                            <label class="lbl">Konfirmasi Password</label>
+                            <label class="lbl">Confirm Password</label>
                             <input id="reset_pw2" name="password_confirmation" type="password" required class="inp">
                         </div>
                     </div>
@@ -178,11 +178,11 @@
     {{-- List Users --}}
     <section class="table-section">
         <div class="table-header">
-            <h3>Daftar User</h3>
+            <h3>User List</h3>
             <div class="table-controls">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Cari nama/email/username/role" id="searchInput" value="{{ $q }}">
+                    <input type="text" placeholder="Search name/email/username/role" id="searchInput" value="{{ $q }}">
                 </div>
                 <a href="{{ route('users.index', array_filter(['q' => $q])) }}" class="btn-filter" title="Refresh">
                     <i class="fas fa-rotate-right"></i>
@@ -194,7 +194,7 @@
             <table class="data-table" id="userTable">
                 <thead>
                 <tr>
-                    <th>Nama</th>
+                    <th>Name</th>
                     <th>Email</th>
                     <th>Username</th>
                     <th>Role</th>

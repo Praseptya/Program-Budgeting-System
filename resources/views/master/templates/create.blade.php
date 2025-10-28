@@ -349,7 +349,7 @@
           </div>
         </div>
         <div class="mt-modal__foot">
-          <button type="button" class="btn-outline" onclick="closeMtModal()">Close</button>
+          <button type="button" class="btn-outline" onclick="closeMtModal()" style="margin-bottom: 5px;">Close</button>
         </div>
       </div>
     </div>

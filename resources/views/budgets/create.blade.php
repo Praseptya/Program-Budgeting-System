@@ -27,19 +27,25 @@
     <form method="POST" action="{{ route('budgets.store') }}" autocomplete="off">
       @csrf
       <div class="grid-2">
-        <div class="col-2">
-            <label class="lbl">Template</label>
-            <select id="tplSelect"
-                    name="template_id"
-                    class="inp"
-                    data-detail-url="{{ route('budgets.template.detail', ['id' => '__ID__'], false) }}"
-                    required>
-            <option value="">Pilih Template</option>
+        <div class="searchable col-2">
+          <label class="lbl">Template</label>
+          <input
+              type="text"
+              id="tplInput"
+              class="inp"
+              placeholder="Cari template…"
+              value="{{ old('template_name') }}"
+              data-detail-url="{{ route('budgets.template.detail', ['id' => '__ID__']) }}" {{-- IMPORTANT --}}
+          >
+          <input type="hidden" name="template_id" id="tplId" value="{{ old('template_id') }}">
+          <ul class="searchable__list" id="tplList" style="display:none;">
             @foreach($templates as $t)
-                <option value="{{ $t->id_template }}">{{ $t->name }}</option>
+              <li data-id="{{ $t->id_template }}">
+                <div class="searchable__name">{{ $t->name }}</div>
+                <div class="searchable__meta">{{ $t->category }} • {{ \Illuminate\Support\Str::limit($t->description, 60) }}</div>
+              </li>
             @endforeach
-            </select>
-            @error('template_id') <div class="flash error" style="margin-top:6px">{{ $message }}</div> @enderror
+          </ul>
         </div>
         <div>
             <label class="lbl">Budget Name</label>
@@ -57,8 +63,9 @@
             <input id="totalBudget"
                 type="text"
                 class="inp"
+                name="total_budget"
+                value="{{ old('total_budget') }}"
                 placeholder="—"
-                value=""
                 readonly required>
         </div>
         <div>

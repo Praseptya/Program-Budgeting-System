@@ -77,7 +77,7 @@
                     @if(strtolower($b->status ?? '') !== 'pending')
                     <form action="{{ route('budgets.destroy', $b->id_budget) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data budget ini?');">
                         @csrf @method('DELETE')
-                        <button type="submit" class="btn-action btn-reject" title="Hapus">
+                        <button type="submit" class="btn-action" title="Hapus">
                         <i class="fas fa-trash"></i>
                         </button>
                     </form>

@@ -15,7 +15,7 @@
   }
 @endphp
 
-<aside class="mtv-sidebar">
+<aside id="appSidebar" class="mtv-sidebar">
   {{-- Header --}}
   <div class="sb-head">
     <div class="logo">
